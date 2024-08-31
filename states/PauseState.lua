@@ -11,10 +11,12 @@ function PauseState:enter(params)
     self.timer = params.timer
     self.score = params.score
     self.lastY = params.lastY
+    sounds['pause']:play()
+    sounds['music']:pause()
 end
 
 function PauseState:update(dt)
-    -- go back to play if enter is pressed
+    -- go back to play if p is pressed
     if love.keyboard.wasPressed('p') then
         gStateMachine:change('play', {
             bird = self.bird,
@@ -30,9 +32,14 @@ function PauseState:render()
     for _, pair in pairs(self.pipePairs) do
         pair:render()
     end
-
     love.graphics.setFont(flappyFont)
     love.graphics.print('Score: ' .. tostring(self.score), 8, 8)
 
     self.bird:render()
+    love.graphics.draw(love.graphics.newImage("images/pause-icon.png"), VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 + 8)
+end
+
+function PauseState:exit()
+    sounds['pause']:play()
+    sounds['music']:play()
 end
