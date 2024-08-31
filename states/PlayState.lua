@@ -19,17 +19,30 @@ BIRD_HEIGHT = 24
 
 local random_horizontal_gap = 0
 
-function PlayState:init()
-    self.bird = Bird()
-    self.pipePairs = {}
-    self.timer = 0
-    self.score = 0
-
-    -- initialize our last recorded Y value for a gap placement to base other gaps off of
-    self.lastY = -PIPE_HEIGHT + math.random(80) + 20
+--[[
+    Called when this state is transitioned to from another state.
+]]
+function PlayState:enter(params)
+    -- if we're coming from death, restart scrolling
+    scrolling = true
+    self.bird = params.bird
+    self.pipePairs = params.pipePairs
+    self.timer = params.timer
+    self.score = params.score
+    self.lastY = params.lastY
 end
 
 function PlayState:update(dt)
+    if love.keyboard.wasPressed('p') then
+        gStateMachine:change('pause', {
+            bird = self.bird,
+            pipePairs = self.pipePairs,
+            timer = self.timer,
+            score = self.score,
+            lastY = self.lastY
+        })
+    end
+
     -- update timer for pipe spawning
     self.timer = self.timer + dt
 
@@ -52,7 +65,7 @@ function PlayState:update(dt)
     end
 
     -- for every pair of pipes..
-    for k, pair in pairs(self.pipePairs) do
+    for _, pair in pairs(self.pipePairs) do
         -- score a point if the pipe has gone past the bird to the left all the way
         -- be sure to ignore it if it's already been scored
         if not pair.scored then
@@ -83,7 +96,6 @@ function PlayState:update(dt)
             if self.bird:collides(pipe) then
                 sounds['explosion']:play()
                 sounds['hurt']:play()
-
                 gStateMachine:change('score', {
                     score = self.score
                 })
@@ -106,7 +118,7 @@ function PlayState:update(dt)
 end
 
 function PlayState:render()
-    for k, pair in pairs(self.pipePairs) do
+    for _, pair in pairs(self.pipePairs) do
         pair:render()
     end
 
@@ -114,14 +126,6 @@ function PlayState:render()
     love.graphics.print('Score: ' .. tostring(self.score), 8, 8)
 
     self.bird:render()
-end
-
---[[
-    Called when this state is transitioned to from another state.
-]]
-function PlayState:enter()
-    -- if we're coming from death, restart scrolling
-    scrolling = true
 end
 
 --[[
